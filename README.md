@@ -18,7 +18,7 @@ public class PaymentProcessor {
 
 این کلاس بیشتر از پردازش payment ها انجام می‌دهد و شامل اعتبارسنجی، ثبت لاگ و منطق برای انواع مختلف پرداخت است که با اصل "یک کار انجام بده" مغایرت دارد.
 
-🔴 2. نام متد: processPayment
+ 2. نام متد: processPayment
 
 ```java
 public Map<String, String> processPayment(...)
@@ -26,7 +26,7 @@ public Map<String, String> processPayment(...)
 
 نام متد عمومی است و نشان نمی‌دهد که مسیریابی، اعتبارسنجی و ثبت لاگ انجام می‌دهد. این یک "Long Method" و "Divergent Change" است که باعث شکنندگی می‌شود.
 
-🔴 3. لیست پارامترهای متد: processPayment(...)
+ 3. لیست پارامترهای متد: processPayment(...)
 
 ```java
 public Map<String, String> processPayment(String paymentType, double amount, String currency,
@@ -37,7 +37,7 @@ public Map<String, String> processPayment(String paymentType, double amount, Str
 
 یک "Long Parameter List" است که به مدل‌های داده‌ای بهتر نیاز دارد.
 
-🔴 4. استفاده از Map خام Map <String, String>
+ 4. استفاده از Map خام Map <String, String>
 
 ```java
 Map<String, String> customerInfo, Map<String, String> paymentDetails
@@ -45,7 +45,7 @@ Map<String, String> customerInfo, Map<String, String> paymentDetails
 
 استفاده از `Map`‌های خام بدون ساختار خاص موجب احتمال خطا و نقص ایمنی نوع می‌شود. این یک "Primitive Obsession" است و بهتر است داده‌ها در اشیاء کپسوله شوند.
 
-🔴 5. رشته‌های سخت‌کد شده برای انواع پرداخت‌ها
+ 5. رشته‌های سخت‌کد شده برای انواع پرداخت‌ها
 
 ```java
 switch (paymentType) {
@@ -58,7 +58,7 @@ switch (paymentType) {
 
 این یک "Magic String" است که استفاده از `enum`‌ها می‌تواند بهتر باشد.
 
-🔴 6. کد تکراری در processCreditCard، processDigitalWallet و processBankTransfer  
+ 6. کد تکراری در processCreditCard، processDigitalWallet و processBankTransfer  
 نمونه کد:
 
 ```java
@@ -71,7 +71,7 @@ System.out.println("Processing [type] payment for " + customerInfo.get("name"));
 
 این یک "Duplicate Code" است که باعث بالا رفتن هزینه‌های نگهداری و احتمال خطا می‌شود.
 
-🔴 7. ترکیب مسئولیت‌ها: ثبت لاگ در داخل منطق کسب‌وکار
+ 7. ترکیب مسئولیت‌ها: ثبت لاگ در داخل منطق کسب‌وکار
 
 ```java
 System.out.println("Processing credit card payment for " + customerInfo.get("name"));
@@ -81,7 +81,7 @@ System.out.println("LOG: " + logEntry);
 
 چاپ لاگ‌ها به منطق کسب‌وکار وابسته است که باعث می‌شود در صورت تغییر رفتار لاگ، نیاز به تغییر متدهای زیادی باشد. این یک "Shotgun Surgery" است و باعث "Low Cohesion" می‌شود.
 
-🔴 8. متد validatePayment – انفجار منطق شرطی
+ 8. متد validatePayment – انفجار منطق شرطی
 
 ```java
 switch (paymentType) {
@@ -95,7 +95,7 @@ switch (paymentType) {
 
 استفاده از دستورات شرطی برای اعتبارسنجی که با اضافه شدن انواع جدید پیچیده‌تر می‌شود. این یک "Conditional Complexity" و "Feature Envy" است که نیاز به الگوی `Strategy` یا پلی‌مورفیسم دارد.
 
-🔴 9. تولید timestamp: new Date().getTime()
+ 9. تولید timestamp: new Date().getTime()
 
 ```java
 String transactionId = "CC" + new Date().getTime();
@@ -105,7 +105,7 @@ String transactionId = "CC" + new Date().getTime();
 
 این یک "Inappropriate Intimacy" + "Duplicated Code" است که با استخراج یک متد مشترک قابل بهبود است.
 
-🔴 10. نوع بازگشتی تمام متدهای پرداخت: Map<String, String>
+ 10. نوع بازگشتی تمام متدهای پرداخت: Map<String, String>
 
 ```java
 return Map.of("status", "success", "transaction_id", transactionId);
