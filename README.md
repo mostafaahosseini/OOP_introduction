@@ -139,22 +139,3 @@ String status = processor.getTransactionStatus(result.get("transaction_id"));
 
 3. **مشاهده خروجی (Observe Output)**  
    - در کنسول می‌توانید Endpoint درگاه انتخابی، شناسه تراکنش تولیدشده، و اطلاعات مربوط به بازگشت وجه (Refund) یا وضعیت تراکنش را مشاهده کنید.
-
----
-
-## چک‌لیست کامیت (Commit Checklist)
-
-- [x] **ConfigurationManager** و دست‌کم یک پیاده‌سازی مشخص (`EnvConfigurationManager` یا `FileConfigurationManager`).  
-- [x] **GatewayFactory** برای ساخت اشیای درگاه با استفاده از داده‌های پیکربندی.  
-- [x] **PaymentProcessor** دیگر از هیچ مقدار پیکربندی سخت‌کدشده استفاده نمی‌کند.  
-- [x] **Main** گردش تزریق وابستگی را نشان می‌دهد (دیگر هیچ فراخوانی مستقیم `new StripeGateway(...)` با پارامترهای سخت‌کدشده وجود ندارد).
-
-**پیام پیشنهادی برای کامیت**:
-
-```
-"Stage 4: Applied dependency injection and externalized configuration."
-```
-
----
-
-**تبریک!** شما مرحله ۴ را تکمیل کرده‌اید و رویکردی بالغ، قابل‌گسترش، و مناسب محیط تولید برای پردازش پرداخت ایجاد کرده‌اید؛ چرا که پیکربندی و وابستگی به درگاه خارجی را به‌طور کامل از منطق اصلی پرداخت جدا کرده‌اید.
