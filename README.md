@@ -10,7 +10,7 @@
 
 ## code smells
 
-🔴 1. نام کلاس: PaymentProcessor
+ 1. نام کلاس: PaymentProcessor
 
 ```java
 public class PaymentProcessor {
