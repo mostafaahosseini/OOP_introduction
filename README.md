@@ -1,52 +1,31 @@
-# OOP_introduction
+
+---
+
+# بازآرایی برای نهان‌سازی (Encapsulation) و انتزاع (Abstraction)
 
 
+در این مرحله، ما یک کلاس **انتزاعی** به نام `Payment` معرفی کردیم و سه **زیرکلاس مشخص (Concrete Subclasses)** برای انواع مختلف پرداخت (`CreditCardPayment`، `DigitalWalletPayment`، `BankTransferPayment`) ساختیم. هدف اصلی ما کپسوله کردن ویژگی‌های مشترک پرداخت و انتقال منطق اعتبارسنجی از کلاس یکپارچه‌ی `PaymentProcessor` به هر زیرکلاس پرداخت بود. علاوه بر این، کلاس `PaymentProcessor` را ساده کردیم تا ساخت و اعتبارسنجی را به آبجکت‌های `Payment` واگذار کند.
 
+## اهداف بازآرایی (Refactoring Goals)
 
+1. **معرفی یک کلاس انتزاعی**  
+   - فیلدهای مشترک: `amount`, `currency`, `customerInfo`, `paymentDetails`, `timestamp`  
+   - قرارداد مشترک (`validatePayment()`) برای کلاس‌های فرزند
 
+2. **ایجاد زیرکلاس‌های مشخص**  
+   - `CreditCardPayment`، `DigitalWalletPayment`، `BankTransferPayment`  
+   - هر زیرکلاس قوانین اعتبارسنجی مختص خود را پیاده‌سازی می‌کند
 
+3. **جدا کردن منطق پردازش پرداخت**  
+   - اکنون `PaymentProcessor` بر جریان کار تمرکز دارد و وظایف زیر را تفویض می‌کند:
+     1. **ایجاد آبجکت** (مثلاً ساخت زیرکلاس صحیح `Payment`)  
+     2. **اعتبارسنجی** (فراخوانی `validatePayment()` در زیرکلاس مربوطه)  
+     3. **لاگ‌گیری تراکنش و رسیدگی به Endpointهای API خارجی** در یک محل متمرکز
 
-در ادامه یک نمونه مستندات مرحله ۲ (Stage 2) به سبک README.md ارائه شده است که با الزامات تمرین و پیاده‌سازی فعلی شما همخوانی دارد. این مستند شامل یک مرور کلی از بازآرایی، معماری کلاس‌های جدید، و نمونه‌هایی از توضیحات به سبک Javadoc است. در صورت نیاز می‌توانید آن را مطابق سلیقه یا استاندارد تیم خود تنظیم کنید.
+## معماری کلاس (Class Architecture)
 
-مرحله ۲: بازآرایی برای نهان‌سازی (Encapsulation) و انتزاع (Abstraction)
-مرور کلی (Overview)
-در این مرحله، ما یک کلاس انتزاعی به نام Payment معرفی کردیم و سه زیرکلاس مشخص (Concrete Subclasses) برای انواع مختلف پرداخت (CreditCardPayment، DigitalWalletPayment، BankTransferPayment) ساختیم. هدف اصلی ما کپسوله کردن ویژگی‌های مشترک پرداخت و انتقال منطق اعتبارسنجی از کلاس یکپارچه‌ی PaymentProcessor به هر زیرکلاس پرداخت بود. علاوه بر این، کلاس PaymentProcessor را ساده کردیم تا ساخت و اعتبارسنجی را به آبجکت‌های Payment واگذار کند.
-اهداف بازآرایی (Refactoring Goals)
-معرفی یک کلاس انتزاعی
-
-
-فیلدهای مشترک: amount, currency, customerInfo, paymentDetails, timestamp
-
-
-قرارداد مشترک (validatePayment()) برای کلاس‌های فرزند
-
-
-ایجاد زیرکلاس‌های مشخص
-
-
-CreditCardPayment، DigitalWalletPayment، BankTransferPayment
-
-
-هر زیرکلاس قوانین اعتبارسنجی مختص خود را پیاده‌سازی می‌کند
-
-
-جدا کردن منطق پردازش پرداخت
-
-
-اکنون PaymentProcessor بر جریان کار تمرکز دارد و وظایف زیر را تفویض می‌کند:
-
-
-ایجاد آبجکت (مثلاً ساخت زیرکلاس صحیح Payment)
-
-
-اعتبارسنجی (فراخوانی validatePayment() در زیرکلاس مربوطه)
-
-
-لاگ‌گیری تراکنش و رسیدگی به Endpointهای API خارجی در یک محل متمرکز
-
-
-معماری کلاس (Class Architecture)
-                  ┌──────────────────┐
+```
+                   ┌──────────────────┐
                    │   Payment (abstract) 
                    │  - amount
                    │  - currency
@@ -67,18 +46,17 @@ CreditCardPayment                                DigitalWalletPayment
 BankTransferPayment
 - Specific validatePayment()
 
+```
 
-Payment: یک کلاس انتزاعی که ویژگی‌های مشترک را تعریف کرده و متد validatePayment() را به‌صورت قراردادی ارائه می‌کند.
+- **Payment**: یک کلاس انتزاعی که ویژگی‌های مشترک را تعریف کرده و متد `validatePayment()` را به‌صورت قراردادی ارائه می‌کند.  
+- **CreditCardPayment**، **DigitalWalletPayment**، **BankTransferPayment**: کلاس‌های مشخصی که متد `validatePayment()` را برای نوع پرداخت خودشان پیاده‌سازی می‌کنند.  
+- **PaymentProcessor**: از رشته‌ی `paymentType` برای ایجاد زیرکلاس صحیح استفاده می‌کند؛ قبل از ادامه، متد `validatePayment()` را فراخوانی می‌کند و سپس شبیه‌سازی API خارجی و لاگ‌گیری را انجام می‌دهد.
 
+## جزئیات پیاده‌سازی (Implementation Details)
 
-CreditCardPayment، DigitalWalletPayment، BankTransferPayment: کلاس‌های مشخصی که متد validatePayment() را برای نوع پرداخت خودشان پیاده‌سازی می‌کنند.
+### 1. کلاس انتزاعی `Payment`
 
-
-PaymentProcessor: از رشته‌ی paymentType برای ایجاد زیرکلاس صحیح استفاده می‌کند؛ قبل از ادامه، متد validatePayment() را فراخوانی می‌کند و سپس شبیه‌سازی API خارجی و لاگ‌گیری را انجام می‌دهد.
-
-
-جزئیات پیاده‌سازی (Implementation Details)
-1. کلاس انتزاعی Payment
+```java
 /**
  * نماینده‌ی یک پرداخت کلی با ویژگی‌های پایه (مبلغ، ارز، اطلاعات مشتری و غیره).
  * زیرکلاس‌ها باید پیاده‌سازی مخصوص خود از validatePayment() را ارائه کنند.
@@ -114,8 +92,11 @@ public abstract class Payment {
      */
     public abstract boolean validatePayment();
 }
+```
 
-2. CreditCardPayment (زیرکلاس مشخص)
+### 2. `CreditCardPayment` (زیرکلاس مشخص)
+
+```java
 /**
  * منطق اعتبارسنجی مختص تراکنش‌های کارت اعتباری را مدیریت می‌کند.
  */
@@ -143,8 +124,11 @@ public class CreditCardPayment extends Payment {
         return paymentDetails.getOrDefault("card_number", "").length() >= 12;
     }
 }
+```
 
-3. DigitalWalletPayment (زیرکلاس مشخص)
+### 3. `DigitalWalletPayment` (زیرکلاس مشخص)
+
+```java
 /**
  * منطق اعتبارسنجی مختص تراکنش‌های کیف پول دیجیتال را مدیریت می‌کند.
  */
@@ -172,8 +156,11 @@ public class DigitalWalletPayment extends Payment {
         return paymentDetails.containsKey("wallet_id");
     }
 }
+```
 
-4. BankTransferPayment (زیرکلاس مشخص)
+### 4. `BankTransferPayment` (زیرکلاس مشخص)
+
+```java
 /**
  * منطق اعتبارسنجی مختص تراکنش‌های انتقال بانکی را مدیریت می‌کند.
  */
@@ -201,8 +188,11 @@ public class BankTransferPayment extends Payment {
         return paymentDetails.containsKey("account_number");
     }
 }
+```
 
-5. کلاس PaymentProcessor (بازآرایی‌شده)
+### 5. کلاس `PaymentProcessor` (بازآرایی‌شده)
+
+```java
 /**
  * روند پرداخت را سازماندهی می‌کند؛ از جمله انتخاب زیرکلاس صحیح از Payment،
  * اعتبارسنجی آن، و سپس پردازش و لاگ‌گیری تراکنش.
@@ -286,8 +276,11 @@ public class PaymentProcessor {
         System.out.println("LOG: " + logEntry);
     }
 }
+```
 
-6. نمونه استفاده در کلاس Main
+### 6. نمونه استفاده در کلاس `Main`
+
+```java
 public class Main {
     public static void main(String[] args) {
         // یک Map پیکربندی که مسیرهای endpoint را برای هر نوع پرداخت مشخص می‌کند
@@ -309,68 +302,20 @@ public class Main {
         System.out.println("Final Result: " + result);
     }
 }
+```
 
-نحوه اجرا (How to Run)
-کامپایل کد
+## نحوه اجرا (How to Run)
 
+1. **کامپایل کد**  
+   - اطمینان حاصل کنید جاوای 8+ و یک IDE سازگار (مانند IntelliJ یا Eclipse) در اختیار دارید.
+2. **اجرای کلاس `Main`**  
+   - متد `main` در فایل `Main.java` نشان می‌دهد که چگونه پیکربندی را انجام دهید و یک پرداخت را پردازش کنید.
+3. **مشاهده خروجی در کنسول**  
+   - در کنسول، گزارش‌های مربوط به اتصال به API، پردازش تراکنش و وضعیت نهایی را مشاهده خواهید کرد.
 
-اطمینان حاصل کنید جاوای 8+ و یک IDE سازگار (مانند IntelliJ یا Eclipse) در اختیار دارید.
+## مزایای کلیدی این بازآرایی (Key Benefits of This Refactoring)
 
-
-اجرای کلاس Main
-
-
-متد main در فایل Main.java نشان می‌دهد که چگونه پیکربندی را انجام دهید و یک پرداخت را پردازش کنید.
-
-
-مشاهده خروجی در کنسول
-
-
-در کنسول، گزارش‌های مربوط به اتصال به API، پردازش تراکنش و وضعیت نهایی را مشاهده خواهید کرد.
-
-
-مزایای کلیدی این بازآرایی (Key Benefits of This Refactoring)
-جدا کردن وظایف (Separation of Concerns): منطق اعتبارسنجی اکنون در هر زیرکلاس قرار دارد و از پیچیدگی در PaymentProcessor کاسته شده است.
-
-
-قابلیت گسترش (Extensibility): برای افزودن نوع پرداخت جدید (مثلاً CryptoPayment)، تنها کافی است یک زیرکلاس جدید از Payment بسازید و در یک مکان (switch در PaymentProcessor) به‌روزرسانی انجام دهید.
-
-
-نگه‌داری آسان (Maintainability): هر زیرکلاس پرداخت را می‌توان به‌صورت مستقل تست و به‌روزرسانی کرد.
-
-
-مراحل بعدی (Next Steps)
-در مراحل آینده، ما:
-نیاز به switch در PaymentProcessor را با معرفی چندریختی (Polymorphism) یا الگوی Factory (مرحله ۳) حذف خواهیم کرد.
-
-
-یک واسط PaymentGateway برای ادغام با سرویس‌های شخص ثالث پیاده‌سازی می‌کنیم.
-
-
-تزریق وابستگی (Dependency Injection) و مدیریت پیکربندی بیرونی را یکپارچه می‌کنیم (مرحله ۴).
-
-
-
-چک‌لیست کامیت برای مرحله ۲
-تمام کلاس‌های جدید (Payment, CreditCardPayment, DigitalWalletPayment, BankTransferPayment)
-
-
-بازآرایی PaymentProcessor و تفویض وظایف به زیرکلاس‌های Payment
-
-
-افزودن توضیحات درون‌کدی و Javadoc برای هر کلاس
-
-
-فایل README (این مستند) با توضیح طراحی و شیوه استفاده
-
-
-پیام پیشنهادی برای کامیت:
-"Stage 2: Added Payment abstraction and concrete subclasses"
-
-
-این مستندات، مرحله ۲ را تکمیل می‌کند. اکنون کد شما به شکل دقیق‌تری از اصول نهان‌سازی (Encapsulation) و انتزاع (Abstraction) پیروی می‌کند و پایه‌ای مستحکم برای بهبودهای منطبق بر SOLID در مراحل بعدی فراهم شده است.
-
-
-
-
+- **جدا کردن وظایف (Separation of Concerns)**: منطق اعتبارسنجی اکنون در هر زیرکلاس قرار دارد و از پیچیدگی در `PaymentProcessor` کاسته شده است.  
+- **قابلیت گسترش (Extensibility)**: برای افزودن نوع پرداخت جدید (مثلاً `CryptoPayment`)، تنها کافی است یک زیرکلاس جدید از `Payment` بسازید و در یک مکان (switch در `PaymentProcessor`) به‌روزرسانی انجام دهید.  
+- **نگه‌داری آسان (Maintainability)**: هر زیرکلاس پرداخت را می‌توان به‌صورت مستقل تست و به‌روزرسانی کرد.
 
