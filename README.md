@@ -1,8 +1,8 @@
 
----
 
 # بازآرایی برای نهان‌سازی (Encapsulation) و انتزاع (Abstraction)
 
+## مرور کلی (Overview)
 
 در این مرحله، ما یک کلاس **انتزاعی** به نام `Payment` معرفی کردیم و سه **زیرکلاس مشخص (Concrete Subclasses)** برای انواع مختلف پرداخت (`CreditCardPayment`، `DigitalWalletPayment`، `BankTransferPayment`) ساختیم. هدف اصلی ما کپسوله کردن ویژگی‌های مشترک پرداخت و انتقال منطق اعتبارسنجی از کلاس یکپارچه‌ی `PaymentProcessor` به هر زیرکلاس پرداخت بود. علاوه بر این، کلاس `PaymentProcessor` را ساده کردیم تا ساخت و اعتبارسنجی را به آبجکت‌های `Payment` واگذار کند.
 
@@ -13,10 +13,10 @@
    - قرارداد مشترک (`validatePayment()`) برای کلاس‌های فرزند
 
 2. **ایجاد زیرکلاس‌های مشخص**  
-   - `CreditCardPayment`، `DigitalWalletPayment`، `BankTransferPayment`  
+   - `CreditCardPayment`, `DigitalWalletPayment`, `BankTransferPayment`  
    - هر زیرکلاس قوانین اعتبارسنجی مختص خود را پیاده‌سازی می‌کند
 
-3. **جدا کردن منطق پردازش پرداخت**
+3. **جدا کردن منطق پردازش پرداخت**  
    - اکنون `PaymentProcessor` بر جریان کار تمرکز دارد و وظایف زیر را تفویض می‌کند:
      1. **ایجاد آبجکت** (مثلاً ساخت زیرکلاس صحیح `Payment`)  
      2. **اعتبارسنجی** (فراخوانی `validatePayment()` در زیرکلاس مربوطه)  
@@ -49,7 +49,7 @@ BankTransferPayment
 ```
 
 - **Payment**: یک کلاس انتزاعی که ویژگی‌های مشترک را تعریف کرده و متد `validatePayment()` را به‌صورت قراردادی ارائه می‌کند.  
-- **CreditCardPayment**، **DigitalWalletPayment**، **BankTransferPayment**: کلاس‌های مشخصی که متد `validatePayment()` را برای نوع پرداخت خودشان پیاده‌سازی می‌کنند.  
+- **CreditCardPayment**, **DigitalWalletPayment**, **BankTransferPayment**: کلاس‌های مشخصی که متد `validatePayment()` را برای نوع پرداخت خودشان پیاده‌سازی می‌کنند.  
 - **PaymentProcessor**: از رشته‌ی `paymentType` برای ایجاد زیرکلاس صحیح استفاده می‌کند؛ قبل از ادامه، متد `validatePayment()` را فراخوانی می‌کند و سپس شبیه‌سازی API خارجی و لاگ‌گیری را انجام می‌دهد.
 
 ## جزئیات پیاده‌سازی (Implementation Details)
@@ -58,8 +58,8 @@ BankTransferPayment
 
 ```java
 /**
- * نماینده‌ی یک پرداخت کلی با ویژگی‌های پایه (مبلغ، ارز، اطلاعات مشتری و غیره).
- * زیرکلاس‌ها باید پیاده‌سازی مخصوص خود از validatePayment() را ارائه کنند.
+ * Represents a general payment with basic attributes (amount, currency, customer info, etc.).
+ * Subclasses must provide their own implementation of validatePayment().
  */
 public abstract class Payment {
     protected double amount;
@@ -69,12 +69,12 @@ public abstract class Payment {
     protected Date timestamp;
 
     /**
-     * یک شیء Payment را با فیلدهای مشترک می‌سازد.
+     * Constructs a Payment object with common fields.
      *
-     * @param amount مبلغ پرداخت
-     * @param currency کد ارز (مثلاً USD, EUR, GBP)
-     * @param customerInfo یک Map شامل اطلاعات مشتری (مثلاً name, email)
-     * @param paymentDetails یک Map شامل داده‌های اختصاصی پرداخت (مثلاً card_number)
+     * @param amount        The payment amount.
+     * @param currency      The currency code (e.g., USD, EUR, GBP).
+     * @param customerInfo  A map containing customer information (e.g., name, email).
+     * @param paymentDetails A map containing payment-specific data (e.g., card number).
      */
     public Payment(double amount, String currency, Map<String, String> customerInfo, Map<String, String> paymentDetails) {
         this.amount = amount;
@@ -85,10 +85,10 @@ public abstract class Payment {
     }
 
     /**
-     * بر اساس قواعد تجاری، جزئیات پرداخت را اعتبارسنجی می‌کند.
-     * زیرکلاس‌های مشخص باید این متد را override کرده و اعتبارسنجی مختص خود را ارائه دهند.
+     * Validates the payment details based on business rules.
+     * Concrete subclasses must override this to provide type-specific validation.
      *
-     * @return true اگر پرداخت معتبر باشد، در غیر این صورت false
+     * @return true if the payment is valid; false otherwise.
      */
     public abstract boolean validatePayment();
 }
@@ -98,23 +98,23 @@ public abstract class Payment {
 
 ```java
 /**
- * منطق اعتبارسنجی مختص تراکنش‌های کارت اعتباری را مدیریت می‌کند.
+ * Handles validation specific to credit card transactions.
  */
 public class CreditCardPayment extends Payment {
 
     /**
-     * شیء CreditCardPayment را می‌سازد.
+     * Constructs a CreditCardPayment object.
      */
     public CreditCardPayment(double amount, String currency, Map<String, String> customerInfo, Map<String, String> paymentDetails) {
         super(amount, currency, customerInfo, paymentDetails);
     }
 
     /**
-     * جزئیات کارت اعتباری را اعتبارسنجی می‌کند:
-     * - مبلغ باید مثبت باشد
-     * - ارز باید یکی از USD, EUR, یا GBP باشد
-     * - اطلاعات مشتری باید شامل email باشد
-     * - طول شماره کارت باید دست‌کم ۱۲ کاراکتر باشد
+     * Validates credit card details:
+     * - Amount must be positive
+     * - Currency must be USD, EUR, or GBP
+     * - Customer info must contain an email
+     * - Card number length must be at least 12 characters
      */
     @Override
     public boolean validatePayment() {
@@ -130,23 +130,23 @@ public class CreditCardPayment extends Payment {
 
 ```java
 /**
- * منطق اعتبارسنجی مختص تراکنش‌های کیف پول دیجیتال را مدیریت می‌کند.
+ * Handles validation specific to digital wallet transactions.
  */
 public class DigitalWalletPayment extends Payment {
 
     /**
-     * شیء DigitalWalletPayment را می‌سازد.
+     * Constructs a DigitalWalletPayment object.
      */
     public DigitalWalletPayment(double amount, String currency, Map<String, String> customerInfo, Map<String, String> paymentDetails) {
         super(amount, currency, customerInfo, paymentDetails);
     }
 
     /**
-     * جزئیات کیف پول دیجیتال را اعتبارسنجی می‌کند:
-     * - مبلغ باید مثبت باشد
-     * - ارز باید یکی از USD, EUR, یا GBP باشد
-     * - اطلاعات مشتری باید شامل email باشد
-     * - باید شامل فیلد 'wallet_id' باشد
+     * Validates digital wallet details:
+     * - Amount must be positive
+     * - Currency must be USD, EUR, or GBP
+     * - Customer info must contain an email
+     * - Must contain a 'wallet_id' field
      */
     @Override
     public boolean validatePayment() {
@@ -162,23 +162,23 @@ public class DigitalWalletPayment extends Payment {
 
 ```java
 /**
- * منطق اعتبارسنجی مختص تراکنش‌های انتقال بانکی را مدیریت می‌کند.
+ * Handles validation specific to bank transfer transactions.
  */
 public class BankTransferPayment extends Payment {
 
     /**
-     * شیء BankTransferPayment را می‌سازد.
+     * Constructs a BankTransferPayment object.
      */
     public BankTransferPayment(double amount, String currency, Map<String, String> customerInfo, Map<String, String> paymentDetails) {
         super(amount, currency, customerInfo, paymentDetails);
     }
 
     /**
-     * جزئیات انتقال بانکی را اعتبارسنجی می‌کند:
-     * - مبلغ باید مثبت باشد
-     * - ارز باید یکی از USD, EUR, یا GBP باشد
-     * - اطلاعات مشتری باید شامل email باشد
-     * - باید شامل فیلد 'account_number' باشد
+     * Validates bank transfer details:
+     * - Amount must be positive
+     * - Currency must be USD, EUR, or GBP
+     * - Customer info must contain an email
+     * - Must contain an 'account_number' field
      */
     @Override
     public boolean validatePayment() {
@@ -194,35 +194,33 @@ public class BankTransferPayment extends Payment {
 
 ```java
 /**
- * روند پرداخت را سازماندهی می‌کند؛ از جمله انتخاب زیرکلاس صحیح از Payment،
- * اعتبارسنجی آن، و سپس پردازش و لاگ‌گیری تراکنش.
+ * Orchestrates the payment process by choosing the right Payment subclass,
+ * validating it, and then handling processing and logging.
  */
 public class PaymentProcessor {
     private Map<String, String> config;
 
     /**
-     * شیء PaymentProcessor را با جزئیات پیکربندی (مانند مسیرهای endpoint) می‌سازد.
+     * Constructs a PaymentProcessor with configuration details such as API endpoints.
      *
-     * @param config یک Map که کلیدهای آن مربوط به endpointهای انواع پرداخت است
-     *               (مثلاً "credit_card_endpoint")
+     * @param config A map where keys are payment type endpoints (e.g., "credit_card_endpoint")
      */
     public PaymentProcessor(Map<String, String> config) {
         this.config = config;
     }
 
     /**
-     * متد سطح بالا برای پردازش یک پرداخت بر اساس نوع پرداخت (paymentType).
+     * High-level method to process a payment based on paymentType.
      *
-     * @param paymentType    نوع پرداخت (مثلاً "credit_card")
-     * @param amount         مبلغ پرداخت
-     * @param currency       کد ارز (مثلاً "USD")
-     * @param customerInfo   شامل فیلدهای مختص مشتری مانند "email" یا "name"
-     * @param paymentDetails فیلدهای اختصاصی نوع پرداخت، مانند "card_number"
-     * @return یک Map شامل وضعیت و transaction ID در صورت موفقیت، در غیر این‌صورت پیام خطا
+     * @param paymentType    The type of payment (e.g., "credit_card")
+     * @param amount         The amount to pay
+     * @param currency       The currency code (e.g., "USD")
+     * @param customerInfo   Contains customer-specific fields like "email" or "name"
+     * @param paymentDetails Contains payment-type-specific fields like "card_number"
+     * @return A map with the status and transaction ID if successful, otherwise an error message.
      */
     public Map<String, String> processPayment(String paymentType, double amount, String currency,
                                               Map<String, String> customerInfo, Map<String, String> paymentDetails) {
-        // ساخت زیرکلاس مناسب از Payment
         Payment payment;
         switch (paymentType) {
             case "credit_card":
@@ -238,19 +236,17 @@ public class PaymentProcessor {
                 return Map.of("status", "failed", "message", "Unknown payment type");
         }
 
-        // اعتبارسنجی پرداخت انتخاب‌شده
         if (!payment.validatePayment()) {
             return Map.of("status", "failed", "message", "Validation error");
         }
 
-        // اجرای جریان پرداخت و لاگ‌گیری تراکنش
         Map<String, String> result = handleProcessing(paymentType, amount, currency, customerInfo, paymentDetails);
         logTransaction(paymentType, amount, currency, customerInfo, paymentDetails, result);
         return result;
     }
 
     /**
-     * شبیه‌سازی اتصال به Endpoint خارجی API و تولید یک transaction ID.
+     * Simulates a connection to an external API endpoint and generates a transaction ID.
      */
     private Map<String, String> handleProcessing(String type, double amount, String currency,
                                                  Map<String, String> customerInfo, Map<String, String> paymentDetails) {
@@ -265,8 +261,7 @@ public class PaymentProcessor {
     }
 
     /**
-     * جزئیات تراکنش پرداخت را در کنسول لاگ می‌کند
-     * (می‌توان این بخش را برای استفاده از سیستم‌های لاگ‌گیری واقعی گسترش داد).
+     * Logs the payment transaction details to the console (or could be extended for real logging systems).
      */
     private void logTransaction(String paymentType, double amount, String currency,
                                 Map<String, String> customerInfo, Map<String, String> paymentDetails,
@@ -283,35 +278,22 @@ public class PaymentProcessor {
 ```java
 public class Main {
     public static void main(String[] args) {
-        // یک Map پیکربندی که مسیرهای endpoint را برای هر نوع پرداخت مشخص می‌کند
         Map<String, String> config = Map.of(
                 "credit_card_endpoint", "https://api.creditcard.com/process",
                 "digital_wallet_endpoint", "https://api.digitalwallet.com/process",
                 "bank_transfer_endpoint", "https://api.banktransfer.com/process"
         );
 
-        // ساخت شیء PaymentProcessor با این تنظیمات
         PaymentProcessor processor = new PaymentProcessor(config);
 
-        // اطلاعات نمونه کاربر و جزئیات پرداخت
         Map<String, String> customer = Map.of("name", "John Doe", "email", "john@example.com");
         Map<String, String> paymentDetails = Map.of("card_number", "123456789012", "expiry", "12/25", "cvv", "123");
 
-        // پردازش یک پرداخت کارت اعتباری
         Map<String, String> result = processor.processPayment("credit_card", 100, "USD", customer, paymentDetails);
         System.out.println("Final Result: " + result);
     }
 }
 ```
-
-## نحوه اجرا (How to Run)
-
-1. **کامپایل کد**  
-   - اطمینان حاصل کنید جاوای 8+ و یک IDE سازگار (مانند IntelliJ یا Eclipse) در اختیار دارید.
-2. **اجرای کلاس `Main`**  
-   - متد `main` در فایل `Main.java` نشان می‌دهد که چگونه پیکربندی را انجام دهید و یک پرداخت را پردازش کنید.
-3. **مشاهده خروجی در کنسول**  
-   - در کنسول، گزارش‌های مربوط به اتصال به API، پردازش تراکنش و وضعیت نهایی را مشاهده خواهید کرد.
 
 ## مزایای کلیدی این بازآرایی (Key Benefits of This Refactoring)
 
