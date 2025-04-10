@@ -1,203 +1,287 @@
-# OOP_introduction
+در ادامه یک نمونه مستندات به سبک `README.md` برای **مرحله ۳ (Stage 3)** ارائه شده است. می‌توانید از این متن در مخزن (Repository) خود استفاده کنید تا توضیح دهید چگونه واسط `PaymentGateway` را معرفی کرده‌اید، درگاه‌های مشخصی را پیاده‌سازی کرده‌اید و به چندریختی (Polymorphism) دست یافته‌اید.
 
-# مرحله ۴: بازآرایی پیشرفته و یکپارچه‌سازی (Advanced Refactoring & Integration)
+---
+
+# مرحله ۳: وراثت و چندریختی با واسط PaymentGateway
 
 ## مرور کلی (Overview)
 
-در **مرحله ۴**، سیستم پرداخت خود را با تمرکز بر دو بهبود عمده گسترش می‌دهیم:
+در این مرحله، ما ادغام درگاه پرداخت (Payment Gateway) خارجی را از منطق اصلی پرداخت جدا می‌کنیم؛ این جداسازی با معرفی یک واسط جدید به نام `PaymentGateway` انجام می‌شود. این تغییر در طراحی باعث می‌شود بتوانید درگاه‌های پرداخت مختلف (مثلاً Stripe یا PayPal) را بدون تغییر در کد پردازش یا اعتبارسنجی پرداخت‌های موجود، جابه‌جا کنید. همچنین این کار قدرت **چندریختی** را نشان می‌دهد که از اصول مهم برنامه‌نویسی شیءگرا است.
 
-1. **تزریق وابستگی (Dependency Injection - DI)**  
-   اطمینان از این‌که کلاس‌های سطح بالای ما (مانند `PaymentProcessor`) وابستگی‌هایشان (در اینجا، اشیای `PaymentGateway`) را از یک سازوکار خارجی دریافت می‌کنند، به‌جای این‌که خودشان به‌صورت سخت‌کد شده یا با ساخت مستقیم بسازند.
+## اهداف (Goals)
 
-2. **مدیریت پیکربندی (Configuration Management)**  
-   بارگیری جزئیات حساس یا وابسته به محیط (مانند کلیدهای API، آدرس‌های Endpoints) از منابع خارجی مانند متغیرهای محیطی یا فایل‌های properties. این کار، پیکربندی را از کد منبع جدا می‌کند و استقرار در محیط‌های مختلف (Dev, Staging, Production) را ساده‌تر می‌سازد.
+1. **طراحی واسط (Interface Design)**  
+   تعریف یک واسط به نام `PaymentGateway` که عملیات مشترک مربوط به پردازش پرداخت خارجی را مشخص می‌کند:
+   - `processPayment(Payment payment)`
+   - `refundPayment(String transactionId, double amount)`
+   - `getTransactionStatus(String transactionId)`
 
-با اتمام این مرحله، ما با **اصل معکوس وابستگی (Dependency Inversion Principle)** همخوانی بیشتری پیدا می‌کنیم و اطمینان می‌یابیم که طراحی ما **ماژولار** و **قابل نگه‌داری** است.
+2. **پیاده‌سازی درگاه‌های مشخص (Implement Specific Gateways)**  
+   ایجاد دست‌کم دو کلاس که واسط `PaymentGateway` را پیاده‌سازی می‌کنند:
+   - `StripeGateway`
+   - `PayPalGateway`
+   در صورت تمایل، یک کلاس انتزاعی `BaseGateway` نیز معرفی کنید تا کد مشترک (مثلاً ساخت آی‌دی تراکنش یا پیکربندی) در آن قرار گیرد.
 
----
+3. **چندریختی (Polymorphism)**  
+   - تغییر سیستم (به‌ویژه کلاس `PaymentProcessor`) به نحوی که در زمان اجرا (Runtime) بتواند هر شیء پیاده‌کننده‌ی `PaymentGateway` را بپذیرد.  
+   - نمایش این موضوع که یک آبجکت `Payment` چگونه می‌تواند توسط درگاه‌های مختلف تنها از طریق یک تغییر پیکربندی ساده یا تزریق در سازنده (Constructor Injection) پردازش شود.
 
-## اهداف مرحله ۴ (Goals for Stage 4)
+## جزئیات پیاده‌سازی (Implementation Details)
 
-1. **جدا کردن وابستگی‌های خارجی (Isolate External Dependencies)**  
-   - کلاس‌های درگاه پرداخت (`StripeGateway`, `PayPalGateway`) نباید به مقادیر جاسازی‌شده در کد وابسته باشند. در عوض، پیکربندی لازم (مثلاً Endpoints, API Keys) را از طریق پارامترهای تزریق‌شده یا یک مدیر پیکربندی (Configuration Manager) دریافت می‌کنند.
-
-2. **بهبود مدیریت پیکربندی (Improve Configuration Management)**  
-   - یک یا چند پیاده‌سازی از واسط `ConfigurationManager` فراهم کنید که بتواند جزئیات پیکربندی را از موارد زیر بارگیری کند:
-     - متغیرهای محیطی (مثلاً `EnvConfigurationManager`)
-     - فایل‌های `.properties` (مثلاً `FileConfigurationManager`)
-   - هر `PaymentGateway` می‌تواند از مقادیر بارگذاری‌شده (مانند `endpoint` و `apiKey`) استفاده کند و این امکان را فراهم می‌آورد که استقرارها هم امن باشند و هم منعطف.
-
-3. **مرزبندی شفاف ماژول‌ها (Clear Module Boundaries)**  
-   - **پیکربندی (Configuration)** در ماژول ویژه‌ای (`com.example.config`) مدیریت می‌شود.  
-   - **ادغام با درگاه پرداخت (Gateway Integration)** در ماژول ویژه‌ای (`com.example.gateway`) صورت می‌گیرد.  
-   - **منطق دامنه (Domain Logic)** در کلاس‌های `Payment` (`com.example.payment`) باقی می‌ماند.  
-   - **هماهنگی (Orchestration)** توسط `PaymentProcessor` (`com.example.processor`) انجام می‌شود، که از تزریق سازنده (Constructor Injection) برای دریافت `PaymentGateway` استفاده می‌کند.
-
----
-
-## نمودار معماری (Architecture Diagram)
-
-نمایی ساده‌شده:
-
-
-                      +----------------------------+
-                      | ConfigurationManager       |
-                      | (Env or File-based)        |
-                      +------------+---------------+
-                                   |
-            +----------------------v------------------------+
-            | GatewayFactory                               |
-            | - Uses ConfigurationManager to load configs  |
-            | - Creates PaymentGateway instance            |
-            +----------------------+------------------------+
-                                   |
-      +----------------------------v---------------------------+
-      | PaymentGateway (Interface)                             |
-      | (StripeGateway, PayPalGateway)                         |
-      +----------------------------+---------------------------+
-                                   |
-                        +----------v-------------+
-                        | PaymentProcessor       |
-                        | - Validates Payment    |
-                        | - Delegates to Gateway |
-                        +----------^-------------+
-                                   |
-                       +-----------|------------+
-                       |  Payment (Abstract)    |
-                       |  (CreditCardPayment,   |
-                       |   DigitalWalletPayment,|
-                       |   BankTransferPayment) |
-                       +------------------------+
-
-
----
-
-## کلاس‌ها و واسط‌های کلیدی (Key Classes & Interfaces)
-
-1. **ConfigurationManager**  
-   - واسطی که متد `getConfig(String serviceName)` را تعریف می‌کند → یک Map از کلید/مقدارهای پیکربندی باز می‌گرداند.  
-   - **EnvConfigurationManager** – بارگیری پیکربندی از متغیرهای محیطی (مثلاً `STRIPE_ENDPOINT`, `PAYPAL_ENDPOINT`).  
-   - **FileConfigurationManager** – (اختیاری) بارگیری از یک فایل `.properties` محلی.
-
-2. **GatewayFactory**  
-   - یک کلاس فکتوری که از `ConfigurationManager` برای ساخت نمونه‌ی مناسب `PaymentGateway` بر اساس نام ورودی (مثلاً `"stripe"`, `"paypal"`) استفاده می‌کند.  
-   - این ساختار تضمین می‌کند که در متد `Main` به‌صورت دستی درگاه‌ها را نمونه‌سازی نکنیم.
-
-3. **PaymentGateway**  
-   - واسط تعریف‌شده در مرحله ۳، با متدهای `processPayment()`, `refundPayment()`, و `getTransactionStatus()`.  
-   - **StripeGateway** و **PayPalGateway** – از داده‌های پیکربندی که توسط `GatewayFactory` داده می‌شود استفاده می‌کنند تا Endpointها، کلیدهای API و... را تنظیم کنند.
-
-4. **PaymentProcessor**  
-   - یک شیء از جنس `PaymentGateway` را در سازنده می‌پذیرد.  
-   - آبجکت `Payment` را اعتبارسنجی کرده و سپس عملیات پرداخت را به درگاه تزریق‌شده تفویض می‌کند.
-
-5. **Main**  
-   - نشان می‌دهد چگونه همه‌چیز را کنار هم قرار دهیم:  
-     - انتخاب یک `ConfigurationManager`.  
-     - ساخت یک `GatewayFactory`.  
-     - ایجاد درگاه پرداخت مورد نظر (`PaymentGateway`).  
-     - نمونه‌سازی `PaymentProcessor` با آن درگاه.  
-     - ساخت یک آبجکت `Payment` (مثلاً `CreditCardPayment`) و پردازش آن.
-
----
-
-## نمونه استفاده (Example Usage) - کد نمایشی (Pseudocode)
+### 1. واسط PaymentGateway
 
 ```java
-// 1) انتخاب Configuration Manager
-ConfigurationManager configManager = new EnvConfigurationManager();
-// یا می‌توانید استفاده کنید از:
-// ConfigurationManager configManager = new FileConfigurationManager("app.properties");
+import java.util.Map;
 
-// 2) ساخت GatewayFactory
-GatewayFactory factory = new GatewayFactory(configManager);
+/**
+ * Defines the contract for external payment gateway integrations.
+ * Implementing classes should handle communication with a third-party service.
+ */
+public interface PaymentGateway {
 
-// 3) ایجاد یک PaymentGateway براساس نام
-PaymentGateway gateway = factory.createGateway("stripe");
+    /**
+     * Processes a payment through this gateway.
+     *
+     * @param payment A concrete Payment object containing amount, currency, etc.
+     * @return A map containing the status of the operation, transaction ID, or error details.
+     */
+    Map<String, String> processPayment(Payment payment);
 
-// 4) تزریق درگاه به PaymentProcessor
-PaymentProcessor processor = new PaymentProcessor(gateway);
+    /**
+     * Initiates a refund for a given transaction.
+     *
+     * @param transactionId The ID of the transaction to refund.
+     * @param amount        The amount to refund.
+     * @return A map containing refund status and new transaction info, if applicable.
+     */
+    Map<String, String> refundPayment(String transactionId, double amount);
 
-// 5) ساخت یک زیرکلاس از Payment (از مرحله ۲)
-Payment payment = new CreditCardPayment(100, "USD", customerInfo, paymentDetails);
-
-// 6) پردازش Payment
-Map<String, String> result = processor.processPayment(payment);
-
-// 7) رافع یا گرفتن وضعیت در صورت نیاز
-processor.refundPayment(result.get("transaction_id"), 50.0);
-String status = processor.getTransactionStatus(result.get("transaction_id"));
-
-## مزایا (Benefits)
-
-### ماژولار بودن و انعطاف‌پذیری (Modularity & Flexibility)
-- تغییر از Stripe به PayPal یا افزودن یک درگاه جدید (مثلاً **CryptoGateway**) تنها به تغییرات مختصر در کد نیاز دارد — کافیست یک کلاس جدید پیاده‌کننده‌ی **PaymentGateway** ایجاد و در صورت نیاز فکتوری مربوطه به‌روزرسانی شود.
-
-### امنیت و مقیاس‌پذیری (Security & Scalability)
-- کلیدهای API و Endpointها دیگر در کد منبع ذخیره نمی‌شوند که این امر ریسک‌های امنیتی را کاهش می‌دهد.
-- محیط‌های مختلف (Dev، Test، Prod) می‌توانند مقادیر متفاوتی را بارگیری کنند.
-
-### اصل معکوس وابستگی و معماری تمیز (Dependency Inversion & Clean Architecture)
-- ماژول‌های سطح بالا مانند **PaymentProcessor** به انتزاع‌ها (مانند **PaymentGateway** و **ConfigurationManager**) وابسته هستند، نه به پیاده‌سازی‌های مشخص.
-
----
-
-## فایل‌های کد به‌روزشده در مرحله ۴ (Code Files Updated in Stage 4)
-
-### EnvConfigurationManager یا FileConfigurationManager
-- پیکربندی را از متغیرهای محیطی یا فایل‌های مبتنی بر **properties** بارگیری می‌کند.
-- ارجاعات سخت‌کد شده به Endpoint یا کلیدهای API در کلاس‌های درگاه حذف می‌شود.
-
-### GatewayFactory
-- از یک نمونه مقداردهی شده از **ConfigurationManager** استفاده می‌کند تا درگاه مناسب را بسازد.
-- نیاز به ایجاد اشیای درگاه به صورت پراکنده در کد (مثلاً فراخوانی مستقیم `new StripeGateway(...)`) از بین می‌رود.
-
-### PaymentGateway
-- واسط بدون تغییر باقی می‌ماند، اما اکنون کلاس‌های پیاده‌کننده مقادیر را از پیکربندی تزریق‌شده دریافت می‌کنند.
-
-### PaymentProcessor
-- نسبت به مرحله ۳ تغییر عمده‌ای نکرده است، اما اطمینان حاصل می‌کند که دیگر هیچ ارجاعی به تنظیمات خاص درگاه باقی نمانده باشد.
-
-### Main
-- نحوه انتخاب یک **ConfigurationManager** و ساخت درگاه بدون ارجاعات مستقیم به پارامترهای پیکربندی را نشان می‌دهد.
-
----
-
-## نحوه اجرا (How to Run)
-
-### راه‌اندازی پیکربندی (Set Up Configuration)
-- **متغیرهای محیطی**:  
-  اگر از متغیرهای محیطی استفاده می‌کنید، مطمئن شوید متغیرهایی مانند `STRIPE_ENDPOINT`, `STRIPE_API_KEY`, `PAYPAL_ENDPOINT` و ... تعریف شده‌اند.
-  
-- **فایل‌های properties**:  
-  در صورت ترجیح این روش، مقادیری مانند `stripe.endpoint`, `stripe.apiKey`, `paypal.endpoint` و ... را در فایل `.properties` قرار دهید.
-
-### کامپایل و اجرا
-- **کامپایل**:  
-  ```bash
-  javac -d out ./com/example/**/*.java
-
-```markdown
-## اجرا (Execution)
-
-### کامند اجرا:
-```bash
-java -cp out com.example.Main
+    /**
+     * Retrieves the current status of a transaction in the gateway.
+     *
+     * @param transactionId The ID of the transaction to check.
+     * @return A string describing the transaction status (e.g., "completed", "pending", etc.).
+     */
+    String getTransactionStatus(String transactionId);
+}
 ```
 
-### مشاهده خروجی (Observe Output)
-در کنسول، می‌توانید اطلاعاتی همچون:
-- **Endpoint** درگاه انتخابی
-- **شناسه تراکنش** تولیدشده
-- اطلاعات مربوط به **بازگشت وجه (Refund)** یا **وضعیت تراکنش**
+### 2. BaseGateway
 
-را مشاهده کنید.
+اگر بخواهید منطق مشترکی مانند تولید آی‌دی تراکنش یا دسترسی به تنظیمات پیکربندی را بین چند درگاه به اشتراک بگذارید، می‌توانید یک کلاس انتزاعی با نام `BaseGateway` ایجاد کنید:
 
----
+```java
+import java.util.Map;
 
-## چک‌لیست کامیت (Commit Checklist)
-- **ConfigurationManager** و دست‌کم یک پیاده‌سازی مشخص (مثل **EnvConfigurationManager** یا **FileConfigurationManager**).
-- **GatewayFactory** برای ساخت اشیای درگاه با استفاده از داده‌های پیکربندی.
-- **PaymentProcessor** که دیگر از هیچ مقدار پیکربندی سخت‌کدشده استفاده نمی‌کند.
-- **Main** به نحوی که گردش تزریق وابستگی را نمایش می‌دهد (بدون فراخوانی مستقیم `new StripeGateway(...)` با پارامترهای سخت‌کدشده).
+/**
+ * Provides shared functionality for gateway implementations, such as config handling.
+ */
+public abstract class BaseGateway implements PaymentGateway {
+    protected Map<String, String> config;
+
+    public BaseGateway(Map<String, String> config) {
+        this.config = config;
+    }
+
+    /**
+     * Utility to generate a unique transaction ID using a given prefix.
+     */
+    protected String generateTransactionId(String prefix) {
+        return prefix + System.currentTimeMillis();
+    }
+}
 ```
+
+### 3. پیاده‌سازی درگاه‌های مشخص (Concrete Gateway Implementations)
+
+#### 3.1 StripeGateway
+
+```java
+import java.util.Map;
+
+/**
+ * A concrete implementation of PaymentGateway for Stripe.
+ */
+public class StripeGateway extends BaseGateway {
+
+    public StripeGateway(Map<String, String> config) {
+        super(config);
+    }
+
+    @Override
+    public Map<String, String> processPayment(Payment payment) {
+        System.out.println("StripeGateway: Processing payment for " + payment.customerInfo.get("name"));
+        System.out.println("StripeGateway: Using endpoint: " + config.getOrDefault("stripeEndpoint", "N/A"));
+
+        String transactionId = generateTransactionId("STR_");
+        return Map.of("status", "success", "transaction_id", transactionId);
+    }
+
+    @Override
+    public Map<String, String> refundPayment(String transactionId, double amount) {
+        System.out.println("StripeGateway: Refunding " + amount + " for transaction " + transactionId);
+        return Map.of("status", "refunded", "refund_id", "REF_" + transactionId);
+    }
+
+    @Override
+    public String getTransactionStatus(String transactionId) {
+        System.out.println("StripeGateway: Checking status for transaction " + transactionId);
+        return "completed";
+    }
+}
+```
+
+#### 3.2 PayPalGateway
+
+```java
+import java.util.Map;
+
+/**
+ * A concrete implementation of PaymentGateway for PayPal.
+ */
+public class PayPalGateway extends BaseGateway {
+
+    public PayPalGateway(Map<String, String> config) {
+        super(config);
+    }
+
+    @Override
+    public Map<String, String> processPayment(Payment payment) {
+        System.out.println("PayPalGateway: Processing payment for " + payment.customerInfo.get("name"));
+        System.out.println("PayPalGateway: Using endpoint: " + config.getOrDefault("paypalEndpoint", "N/A"));
+
+        String transactionId = generateTransactionId("PP_");
+        return Map.of("status", "success", "transaction_id", transactionId);
+    }
+
+    @Override
+    public Map<String, String> refundPayment(String transactionId, double amount) {
+        System.out.println("PayPalGateway: Refunding " + amount + " for transaction " + transactionId);
+        return Map.of("status", "refunded", "refund_id", "REF_" + transactionId);
+    }
+
+    @Override
+    public String getTransactionStatus(String transactionId) {
+        System.out.println("PayPalGateway: Checking status for transaction " + transactionId);
+        return "completed";
+    }
+}
+```
+
+### 4. به‌روزرسانی کلاس PaymentProcessor
+
+در این قسمت، کلاس `PaymentProcessor` (از مرحله ۲) را طوری تغییر می‌دهیم که به جای پردازش مستقیم درگاه خارجی، متکی به یک شیء از جنس `PaymentGateway` باشد:
+
+```java
+import java.util.Map;
+
+/**
+ * Orchestrates payment validation and delegates to a specific PaymentGateway.
+ */
+public class PaymentProcessor {
+
+    private final PaymentGateway gateway;
+
+    /**
+     * Constructs the PaymentProcessor with a specified gateway (e.g., Stripe, PayPal).
+     */
+    public PaymentProcessor(PaymentGateway gateway) {
+        this.gateway = gateway;
+    }
+
+    /**
+     * Processes a Payment object by:
+     * 1) Validating the Payment
+     * 2) Invoking the gateway's processPayment method
+     */
+    public Map<String, String> processPayment(Payment payment) {
+        // Validate domain logic first
+        if (!payment.validatePayment()) {
+            return Map.of("status", "failed", "message", "Validation error");
+        }
+
+        // Delegate to the gateway for external processing
+        Map<String, String> result = gateway.processPayment(payment);
+        // Optionally log or persist the transaction result here
+        return result;
+    }
+
+    /**
+     * Initiates a refund through the injected gateway.
+     */
+    public Map<String, String> refundPayment(String transactionId, double amount) {
+        return gateway.refundPayment(transactionId, amount);
+    }
+
+    /**
+     * Retrieves the status of a transaction from the injected gateway.
+     */
+    public String getTransactionStatus(String transactionId) {
+        return gateway.getTransactionStatus(transactionId);
+    }
+}
+```
+
+> **نکته**  
+> کلاس‌های فرزند `Payment` (مانند `CreditCardPayment`، `DigitalWalletPayment` و `BankTransferPayment`) از مرحله ۲ به همان شکل باقی می‌مانند، چراکه هنوز مسئولیت اعتبارسنجی خاص آن نوع پرداخت را بر عهده دارند.
+
+### 5. نمونه اجرا در کلاس Main
+
+مثال زیر **چندریختی در زمان اجرا** را نشان می‌دهد؛ ما بدون تغییر کد در کلاس‌های `PaymentProcessor` یا `Payment`، بین Stripe و PayPal جابه‌جا می‌شویم:
+
+```java
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        // Sample gateway configs
+        Map<String, String> stripeConfig = Map.of(
+                "stripeEndpoint", "https://api.stripe.com",
+                "apiKey", "sk_test_123"
+        );
+        Map<String, String> paypalConfig = Map.of(
+                "paypalEndpoint", "https://api.paypal.com",
+                "clientId", "paypal_client_456"
+        );
+
+        // A typical Payment object from Stage 2 (e.g., CreditCardPayment)
+        Map<String, String> customerInfo = Map.of("name", "John Doe", "email", "john@example.com");
+        Map<String, String> cardDetails = Map.of("card_number", "123456789012", "expiry", "12/25", "cvv", "123");
+        Payment creditCardPayment = new CreditCardPayment(100, "USD", customerInfo, cardDetails);
+
+        // 1) Using StripeGateway
+        PaymentGateway stripeGateway = new StripeGateway(stripeConfig);
+        PaymentProcessor stripeProcessor = new PaymentProcessor(stripeGateway);
+
+        Map<String, String> stripeResult = stripeProcessor.processPayment(creditCardPayment);
+        System.out.println("Stripe Result: " + stripeResult);
+
+        // 2) Switching to PayPalGateway at runtime
+        PaymentGateway paypalGateway = new PayPalGateway(paypalConfig);
+        PaymentProcessor paypalProcessor = new PaymentProcessor(paypalGateway);
+
+        Map<String, String> paypalResult = paypalProcessor.processPayment(creditCardPayment);
+        System.out.println("PayPal Result: " + paypalResult);
+
+        // Demonstrating refund
+        System.out.println("Refunding on PayPal...");
+        Map<String, String> refundResult = paypalProcessor.refundPayment(paypalResult.get("transaction_id"), 50.0);
+        System.out.println("Refund Result: " + refundResult);
+
+        // Checking transaction status
+        String status = paypalProcessor.getTransactionStatus(paypalResult.get("transaction_id"));
+        System.out.println("PayPal Transaction Status: " + status);
+    }
+}
+```
+
+## مزایای این بازآرایی (Benefits of This Refactoring)
+
+- **اصل باز-بسته (Open-Closed Principle)**  
+  افزودن یک درگاه پرداخت جدید (مثلاً `CryptoGateway`) دیگر نیازی به تغییر در `PaymentProcessor` ندارد. فقط کافی است یک پیاده‌سازی جدید از `PaymentGateway` بنویسید.
+
+- **اصل معکوس وابستگی (Dependency Inversion)**  
+  ماژول سطح بالا (`PaymentProcessor`) به یک واسط (`PaymentGateway`) وابسته است، نه به پیاده‌سازی سطح پایین خاصی.
+
+- **چندریختی (Polymorphism)**  
+  در زمان اجرا می‌توانیم پیاده‌سازی‌های مختلف واسط `PaymentGateway` را جایگزین کنیم، بدون آنکه نیاز به دست‌کاری کد با `switch` یا شاخه‌های if-else داشته باشیم.
